@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">VoiceBiometricSystem</string>
+    <string name="button_record">Start Recording</string>
+</resources>
