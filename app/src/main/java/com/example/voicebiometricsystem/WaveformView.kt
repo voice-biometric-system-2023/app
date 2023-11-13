@@ -21,23 +21,30 @@ class WaveformView(context: Context?, attrs: AttributeSet?) : View(context, attr
     private var screenWidth = 0f
     private var screenHeight = 400f
 
+    private var maxSpikes = 0
+
     init {
         paint.color = Color.rgb(244, 81, 30)
 
         screenWidth = resources.displayMetrics.widthPixels.toFloat()
+
+        maxSpikes = (screenWidth / (w+d)).toInt()
     }
 
-    fun addAmplitude(amplitude: Float) {
-        amplitudes.add(amplitude)
+    fun addAmplitude(amp: Float) {
+        val norm = (amp.toInt() / 7).coerceAtMost(400).toFloat()
+
+        amplitudes.add(norm)
 
         spikes.clear()
+
+        val amps = amplitudes.takeLast(maxSpikes)
+
         for (i in amplitudes.indices) {
-            var left = screenWidth - i * (w + d)
-            var top = 0f
-            var right = left + w
-            var bottom = amplitudes[i]
-
-
+            val left = screenWidth - i * (w + d)
+            val top = screenHeight/2 - amps[i]/2
+            val right = left + w
+            val bottom = top + amps[i]
             spikes.add(RectF(left, top, right, bottom))
         }
 
@@ -46,7 +53,7 @@ class WaveformView(context: Context?, attrs: AttributeSet?) : View(context, attr
 
     override fun draw(canvas: Canvas?) {
         super.draw(canvas)
-
+//        canvas?.drawRoundRect(RectF(60f, 60f, 60+80f, 60+360f), 6f, 6f, paint)
         spikes.forEach {
             canvas?.drawRoundRect(it, radius, radius, paint)
         }

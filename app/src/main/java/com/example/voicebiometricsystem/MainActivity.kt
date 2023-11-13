@@ -1,11 +1,12 @@
 package com.example.voicebiometricsystem
 
-import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import androidx.core.app.ActivityCompat
 import android.Manifest.permission
+import android.content.Context
+import android.content.pm.PackageManager
 import android.media.MediaRecorder
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.example.voicebiometricsystem.databinding.ActivityMainBinding
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -27,6 +28,8 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
     private lateinit var timer: Timer
 
+//    private lateinit var context: Context
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -41,7 +44,7 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
         timer = Timer(this)
 
-        binding.startButton.setOnClickListener {
+        binding.loginButton.setOnClickListener {
             startRecording()
         }
     }
@@ -65,12 +68,12 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
             return
         }
 
-        recorder = MediaRecorder()
+        recorder = MediaRecorder(this)
         dirPath = "{$externalCacheDir?.absolutePath}/"
 
-        var simpleDateFormat = SimpleDateFormat("yyyy.MM.DD_hh.mm.ss")
+        val simpleDateFormat = SimpleDateFormat("yyyy.MM.DD_hh.mm.ss")
 
-        var date = simpleDateFormat.format(Date())
+        val date = simpleDateFormat.format(Date())
         filename = "audio_record_$date"
 
         recorder.apply {
@@ -83,10 +86,10 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
                 prepare()
                 start()
             }catch (e: IOException){
-
+                println(e)
             }
         }
-        binding.startButton.isEnabled = false
+        binding.loginButton.isEnabled = false
         isRecording = true
 
         timer.start()
@@ -95,17 +98,16 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
     private fun stopRecording() {
         timer.stop()
-        binding.startButton.isEnabled = true
+        binding.loginButton.isEnabled = true
         isRecording = false
     }
 
     override fun onTimerTick(duration: String) {
 
-        println(recorder.maxAmplitude.toFloat())
         binding.waveformView.addAmplitude(recorder.maxAmplitude.toFloat())
+        println(recorder.maxAmplitude.toFloat())
 
         if (duration.toInt() == 5000) {
-            println(duration)
             stopRecording()
         }
 

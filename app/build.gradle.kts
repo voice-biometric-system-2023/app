@@ -9,7 +9,8 @@ android {
 
     defaultConfig {
         applicationId = "com.example.voicebiometricsystem"
-        minSdk = 24
+        minSdk = 31
+        //noinspection EditedTargetSdkVersion
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"
