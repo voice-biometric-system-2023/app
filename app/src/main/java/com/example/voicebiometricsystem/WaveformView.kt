@@ -40,7 +40,7 @@ class WaveformView(context: Context?, attrs: AttributeSet?) : View(context, attr
 
         val amps = amplitudes.takeLast(maxSpikes)
 
-        for (i in amplitudes.indices) {
+        for (i in amps.indices) {
             val left = screenWidth - i * (w + d)
             val top = screenHeight/2 - amps[i]/2
             val right = left + w

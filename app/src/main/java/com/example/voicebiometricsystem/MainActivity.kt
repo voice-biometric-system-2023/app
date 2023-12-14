@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
     private var permissions: Array<String> = arrayOf(permission.RECORD_AUDIO)
     private var permissionGranted = false
 
-    private lateinit var recorder: MediaRecorder
+    private var recorder: MediaRecorder? = null
     private lateinit var binding: ActivityMainBinding
 
     private var dirPath = ""
@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
         if (!permissionGranted) {
             ActivityCompat.requestPermissions(this, permissions, REQUEST_CODE)
+//            return
         }
 
         timer = Timer(this)
@@ -68,15 +69,15 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
             return
         }
 
-        recorder = MediaRecorder(this)
-        dirPath = "{$externalCacheDir?.absolutePath}/"
+//        recorder = MediaRecorder(this)
+        dirPath = "${externalCacheDir?.absolutePath}/"
 
         val simpleDateFormat = SimpleDateFormat("yyyy.MM.DD_hh.mm.ss")
 
         val date = simpleDateFormat.format(Date())
         filename = "audio_record_$date"
 
-        recorder.apply {
+        recorder = MediaRecorder(this).apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
@@ -104,10 +105,10 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
     override fun onTimerTick(duration: String) {
 
-        binding.waveformView.addAmplitude(recorder.maxAmplitude.toFloat())
-        println(recorder.maxAmplitude.toFloat())
+        recorder?.maxAmplitude?.let { binding.waveformView.addAmplitude(it.toFloat()) }
+        recorder?.maxAmplitude?.let { println(it.toFloat()) }
 
-        if (duration.toInt() == 5000) {
+        if (duration.toInt() == 4000) {
             stopRecording()
         }
 
