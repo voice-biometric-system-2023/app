@@ -1,7 +1,7 @@
 package com.example.voicebiometricsystem
 
 import android.Manifest.permission
-import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Bundle
@@ -11,6 +11,7 @@ import com.example.voicebiometricsystem.databinding.ActivityMainBinding
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
+
 
 const val REQUEST_CODE = 200
 
@@ -47,6 +48,11 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
         binding.loginButton.setOnClickListener {
             startRecording()
+        }
+
+        binding.button.setOnClickListener {
+            val intent = Intent(this, RegisterActivity::class.java)
+            startActivity(intent)
         }
     }
 
@@ -111,7 +117,5 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
         if (duration.toInt() == 4000) {
             stopRecording()
         }
-
-
     }
 }
