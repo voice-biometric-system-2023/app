@@ -1,12 +1,16 @@
 package com.example.voicebiometricsystem
 
 import android.Manifest.permission
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.view.isInvisible
+import com.chaquo.python.Python
+import com.chaquo.python.android.AndroidPlatform
 import com.example.voicebiometricsystem.databinding.ActivityMainBinding
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -21,6 +25,7 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
     private var permissionGranted = false
 
     private var recorder: MediaRecorder? = null
+    private var wavRecorder: WavRecorder? = null
     private lateinit var binding: ActivityMainBinding
 
     private var dirPath = ""
@@ -50,10 +55,15 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
             startRecording()
         }
 
+        binding.stopButton.setOnClickListener {
+            stopRecording()
+        }
+
         binding.button.setOnClickListener {
             val intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)
         }
+
     }
 
     override fun onRequestPermissionsResult(
@@ -75,27 +85,22 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
             return
         }
 
-//        recorder = MediaRecorder(this)
-        dirPath = "${externalCacheDir?.absolutePath}/"
+        binding.loginButton.isInvisible = true
+        binding.stopButton.isInvisible = false
+
+        dirPath = "${externalCacheDir?.absolutePath}"
 
         val simpleDateFormat = SimpleDateFormat("yyyy.MM.DD_hh.mm.ss")
 
         val date = simpleDateFormat.format(Date())
-        filename = "audio_record_$date"
+        filename = "audio_record_$date.wav"
 
-        recorder = MediaRecorder(this).apply {
-            setAudioSource(MediaRecorder.AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setOutputFile("$dirPath$filename.wav")
+        binding.waveformView.clearAmplitudes()
 
-            try {
-                prepare()
-                start()
-            }catch (e: IOException){
-                println(e)
-            }
-        }
+        wavRecorder = WavRecorder()
+
+        wavRecorder?.startRecording(filename, dirPath)
+
         binding.loginButton.isEnabled = false
         isRecording = true
 
@@ -105,17 +110,36 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
     private fun stopRecording() {
         timer.stop()
+
+        binding.loginButton.isInvisible = false
+        binding.stopButton.isInvisible = true
+
         binding.loginButton.isEnabled = true
         isRecording = false
+
+        wavRecorder?.stopRecording()
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onTimerTick(duration: String) {
 
-        recorder?.maxAmplitude?.let { binding.waveformView.addAmplitude(it.toFloat()) }
-        recorder?.maxAmplitude?.let { println(it.toFloat()) }
+        wavRecorder?.getAmplitude()?.let { binding.waveformView.addAmplitude(it) }
 
-        if (duration.toInt() == 4000) {
+        if (duration.toInt() == 3000) {
             stopRecording()
+
+            if (!Python.isStarted()) {
+                Python.start(AndroidPlatform(this))
+            }
+
+            val python = Python.getInstance()
+            val pythonFile = python.getModule("script")
+
+            val trainFunc = pythonFile[ "read_audio_file" ]
+            val result = trainFunc?.call( "$dirPath/$filename", "", "test")
+
+            println(result.toString())
+            binding.textView.setText("Recognized as: " + result.toString())
         }
     }
 }

@@ -1,12 +1,15 @@
 package com.example.voicebiometricsystem
 
-import android.media.MediaRecorder
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isInvisible
 import com.example.voicebiometricsystem.databinding.RegisterLayoutBinding
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
+import com.chaquo.python.Python
+import com.chaquo.python.android.AndroidPlatform
+
 
 class RegisterActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
@@ -15,7 +18,8 @@ class RegisterActivity : AppCompatActivity(), Timer.OnTimerTickListener {
     private var dirPath = ""
     private var filename = ""
     private var isRecording = false
-    private var recorder: MediaRecorder? = null
+    private var wavRecorder: WavRecorder? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,32 +28,41 @@ class RegisterActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
         timer = Timer(this)
 
+        binding.backButton.setOnClickListener {
+            finish()
+        }
+
+        binding.stopButton.setOnClickListener {
+            stopRecording()
+        }
+
         binding.registerButton.setOnClickListener {
-            startRecording()
+            if (binding.textInput.text.toString() == "") {
+                Toast.makeText(this, "Name is required ", Toast.LENGTH_SHORT).show()
+            } else {
+                startRecording()
+            }
         }
     }
 
     private fun startRecording() {
-        dirPath = "${externalCacheDir?.absolutePath}/"
+
+        binding.registerButton.isInvisible = true
+        binding.stopButton.isInvisible = false
+
+        dirPath = "${externalCacheDir?.absolutePath}"
 
         val simpleDateFormat = SimpleDateFormat("yyyy.MM.DD_hh.mm.ss")
 
         val date = simpleDateFormat.format(Date())
-        filename = "audio_record_$date"
+        filename = "audio_record_$date.wav"
 
-        recorder = MediaRecorder(this).apply {
-            setAudioSource(MediaRecorder.AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setOutputFile("$dirPath$filename.wav")
+        binding.waveformView.clearAmplitudes()
 
-            try {
-                prepare()
-                start()
-            }catch (e: IOException){
-                println(e)
-            }
-        }
+        wavRecorder = WavRecorder()
+
+        wavRecorder?.startRecording(filename, dirPath)
+
         binding.registerButton.isEnabled = false
         isRecording = true
 
@@ -59,19 +72,38 @@ class RegisterActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
     private fun stopRecording() {
         timer.stop()
+
+        binding.registerButton.isInvisible = false
+        binding.stopButton.isInvisible = true
+
         binding.registerButton.isEnabled = true
         isRecording = false
+
+        wavRecorder?.stopRecording()
     }
 
     override fun onTimerTick(duration: String) {
 
-        recorder?.maxAmplitude?.let { binding.waveformView.addAmplitude(it.toFloat()) }
-        recorder?.maxAmplitude?.let { println(it.toFloat()) }
+        wavRecorder?.getAmplitude()?.let { binding.waveformView.addAmplitude(it) }
 
         if (duration.toInt() == 20000) {
             stopRecording()
-        }
-    }
 
+            if (!Python.isStarted()) {
+                Python.start(AndroidPlatform(this))
+            }
+
+            val python = Python.getInstance()
+            val pythonFile = python.getModule("script")
+
+            val trainFunc = pythonFile[ "read_audio_file" ]
+            val result = trainFunc?.call( "$dirPath/$filename", binding.textInput.text.toString(), "train")
+
+            println(result.toString())
+
+            Toast.makeText(this, "Registered successfully", Toast.LENGTH_SHORT).show()
+        }
+
+    }
 
 }

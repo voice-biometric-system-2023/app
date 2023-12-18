@@ -51,6 +51,12 @@ class WaveformView(context: Context?, attrs: AttributeSet?) : View(context, attr
         invalidate()
     }
 
+    fun clearAmplitudes() {
+
+        amplitudes.clear()
+
+    }
+
     override fun draw(canvas: Canvas?) {
         super.draw(canvas)
 //        canvas?.drawRoundRect(RectF(60f, 60f, 60+80f, 60+360f), 6f, 6f, paint)

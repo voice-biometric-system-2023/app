@@ -1,0 +1,22 @@
+apply plugin: 'com.chaquo.python'
+
+android {
+    defaultConfig {
+        python {
+            pip {
+                install("scipy")
+            }
+
+            pyc {
+                src false
+            }
+        }
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+}
+

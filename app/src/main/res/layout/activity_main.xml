@@ -40,4 +40,32 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.2" />
 
+    <!-- Hidden "Stop" button -->
+    <Button
+        android:id="@+id/stopButton"
+        android:layout_width="138dp"
+        android:layout_height="68dp"
+        android:layout_marginTop="580dp"
+        android:backgroundTint="@android:color/holo_red_light"
+        android:text="Stop"
+        android:textSize="23sp"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="25sp"
+        android:textColor="#000000"
+    android:gravity="center"
+    android:padding="16dp"
+    app:layout_constraintBottom_toTopOf="@+id/button"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@+id/waveformView" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
