@@ -1,15 +1,17 @@
 package com.example.voicebiometricsystem
 
-import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import androidx.core.app.ActivityCompat
 import android.Manifest.permission
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.MediaRecorder
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.example.voicebiometricsystem.databinding.ActivityMainBinding
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
+
 
 const val REQUEST_CODE = 200
 
@@ -18,7 +20,7 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
     private var permissions: Array<String> = arrayOf(permission.RECORD_AUDIO)
     private var permissionGranted = false
 
-    private lateinit var recorder: MediaRecorder
+    private var recorder: MediaRecorder? = null
     private lateinit var binding: ActivityMainBinding
 
     private var dirPath = ""
@@ -26,6 +28,8 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
     private var isRecording = false
 
     private lateinit var timer: Timer
+
+//    private lateinit var context: Context
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,12 +41,18 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
         if (!permissionGranted) {
             ActivityCompat.requestPermissions(this, permissions, REQUEST_CODE)
+//            return
         }
 
         timer = Timer(this)
 
-        binding.startButton.setOnClickListener {
+        binding.loginButton.setOnClickListener {
             startRecording()
+        }
+
+        binding.button.setOnClickListener {
+            val intent = Intent(this, RegisterActivity::class.java)
+            startActivity(intent)
         }
     }
 
@@ -65,15 +75,15 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
             return
         }
 
-        recorder = MediaRecorder()
-        dirPath = "{$externalCacheDir?.absolutePath}/"
+//        recorder = MediaRecorder(this)
+        dirPath = "${externalCacheDir?.absolutePath}/"
 
-        var simpleDateFormat = SimpleDateFormat("yyyy.MM.DD_hh.mm.ss")
+        val simpleDateFormat = SimpleDateFormat("yyyy.MM.DD_hh.mm.ss")
 
-        var date = simpleDateFormat.format(Date())
+        val date = simpleDateFormat.format(Date())
         filename = "audio_record_$date"
 
-        recorder.apply {
+        recorder = MediaRecorder(this).apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
@@ -83,10 +93,10 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
                 prepare()
                 start()
             }catch (e: IOException){
-
+                println(e)
             }
         }
-        binding.startButton.isEnabled = false
+        binding.loginButton.isEnabled = false
         isRecording = true
 
         timer.start()
@@ -95,20 +105,17 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
     private fun stopRecording() {
         timer.stop()
-        binding.startButton.isEnabled = true
+        binding.loginButton.isEnabled = true
         isRecording = false
     }
 
     override fun onTimerTick(duration: String) {
 
-        println(recorder.maxAmplitude.toFloat())
-        binding.waveformView.addAmplitude(recorder.maxAmplitude.toFloat())
+        recorder?.maxAmplitude?.let { binding.waveformView.addAmplitude(it.toFloat()) }
+        recorder?.maxAmplitude?.let { println(it.toFloat()) }
 
-        if (duration.toInt() == 5000) {
-            println(duration)
+        if (duration.toInt() == 4000) {
             stopRecording()
         }
-
-
     }
 }

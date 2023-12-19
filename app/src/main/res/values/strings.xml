@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">VoiceBiometricSystem</string>
     <string name="button_record">Start Recording</string>
+    <string name="log_in">Log In</string>
+    <string name="register">Register</string>
 </resources>
